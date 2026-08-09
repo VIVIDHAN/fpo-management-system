@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockMembers } from '../utils/mockData';
-import { Plus, Search, FileUp, Download } from 'lucide-react';
+import { Plus, Search, Upload, Download, FileUp } from 'lucide-react';
 import { validateName, validatePhone, validateLandHolding } from '../utils/validators';
 
 const Members = () => {
@@ -51,32 +51,26 @@ const Members = () => {
     setErrors({});
   };
 
-  const handleCsvImport = () => {
-    alert('Mock: Bulk CSV Import workflow initiated. Validating fields...');
-  };
-
   return (
     <div>
-      <div className="d-flex justify-between align-center mb-6">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold">Member Management</h1>
-          <p className="text-muted mt-1">Manage farmer records, shares, and documents.</p>
+          <h1 className="page-title">Member Management</h1>
+          <p className="page-subtitle">Manage farmer records, shares, and documents.</p>
         </div>
         
-        {['Admin', 'FPO Manager'].includes(user?.role) && (
-          <div className="d-flex gap-2">
-            <button className="btn btn-secondary" onClick={handleCsvImport}>
-              <FileUp size={18} /> Import CSV
-            </button>
-            <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-              <Plus size={18} /> Add Member
-            </button>
-          </div>
-        )}
+        <div className="d-flex gap-3">
+          <button className="btn btn-secondary">
+            <Upload size={18} /> Import CSV
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+            <Plus size={18} /> Add Member
+          </button>
+        </div>
       </div>
 
-      <div className="glass-card mb-6 animate-fade-in-up">
-        <div className="d-flex justify-between align-center mb-4">
+      <div className="card-panel mb-6 animate-fade-up">
+        <div className="card-body">
           <div className="relative w-full max-w-md">
             <Search className="absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} size={18} />
             <input 
@@ -88,12 +82,9 @@ const Members = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="btn btn-outline">
-            <Download size={18} /> Export
-          </button>
         </div>
 
-        <div className="table-container">
+        <div className="table-container" style={{ border: 'none', borderTop: '1px solid var(--border-color)', borderRadius: 0 }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -107,13 +98,13 @@ const Members = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.map(m => (
+              {filtered.map(m => (
                 <tr key={m.id}>
-                  <td className="font-medium text-primary">{m.memberId}</td>
+                  <td className="text-primary font-medium">{m.memberId}</td>
                   <td>{m.name}</td>
                   <td>{m.phone}</td>
                   <td>{m.village}</td>
-                  <td>{m.landHolding}</td>
+                  <td>{m.landAcres}</td>
                   <td>₹{m.shareCapital}</td>
                   <td>
                     <span className={`badge ${m.status === 'ACTIVE' ? 'badge-success' : 'badge-warning'}`}>
@@ -122,13 +113,13 @@ const Members = () => {
                   </td>
                 </tr>
               ))}
-              {filteredMembers.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="text-center py-5 text-muted">No members found.</td>
-                </tr>
-              )}
             </tbody>
           </table>
+          {filtered.length === 0 && (
+            <div className="text-center py-8 text-muted">
+              No members found.
+            </div>
+          )}
         </div>
       </div>
 

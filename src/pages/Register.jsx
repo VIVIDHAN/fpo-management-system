@@ -7,10 +7,11 @@ const Register = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', role: 'Member', password: '', confirmPassword: ''
+    name: '', email: '', phone: '', role: 'Member', password: '', confirmPassword: '', otp: ''
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,7 +35,7 @@ const Register = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     const newErrors = {};
     newErrors.password = validatePassword(formData.password);
@@ -49,10 +50,69 @@ const Register = () => {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          phone: formData.phone
+        })
+      });
+
+      if (response.ok) {
+        setIsSubmitting(false);
+        setOtpSent(true);
+        setStep(3);
+      } else {
+        const data = await response.json();
+        setErrors({ submit: data.error || 'Failed to send OTP' });
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      setErrors({ submit: 'Network error connecting to backend' });
       setIsSubmitting(false);
-      setStep(3); 
-    }, 1200);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!formData.otp) {
+      setErrors({ submit: 'Please enter the OTP' });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      let roleEnum = formData.role.toUpperCase().replace(' ', '_');
+      
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          role: roleEnum,
+          password: formData.password,
+          otp: formData.otp
+        })
+      });
+
+      if (response.ok) {
+        setIsSubmitting(false);
+        navigate('/login', { state: { message: 'Registration successful! You can now log in.' } });
+      } else {
+        const data = await response.json();
+        setErrors({ submit: data.error || 'Registration failed' });
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      setErrors({ submit: 'Network error connecting to backend' });
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -91,11 +151,17 @@ const Register = () => {
                   {step > num ? <Check size={18} strokeWidth={3} /> : <span className="font-semibold text-sm">{num}</span>}
                 </div>
                 <span className={`text-sm font-medium ${step >= num ? 'text-main' : 'text-muted'}`}>
-                  {num === 1 ? 'Personal Details' : num === 2 ? 'Security Setup' : 'Done'}
+                  {num === 1 ? 'Personal Details' : num === 2 ? 'Security Setup' : 'Verification'}
                 </span>
               </div>
             ))}
           </div>
+
+          {errors.submit && (
+            <div className="p-3 mb-6 bg-red-50 text-red-600 rounded-md text-sm border border-red-200 text-center">
+              {errors.submit}
+            </div>
+          )}
 
           {step === 1 && (
             <div className="animate-fade-up">
@@ -154,27 +220,39 @@ const Register = () => {
                 <button type="button" className="btn btn-secondary btn-large" onClick={() => setStep(1)}>
                   Back
                 </button>
-                <button type="button" className="btn btn-primary btn-large flex-1 justify-center" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating Account...' : 'Complete Registration'}
+                <button type="button" className="btn btn-primary btn-large flex-1 justify-center" onClick={handleSendOtp} disabled={isSubmitting}>
+                  {isSubmitting ? 'Sending OTP...' : 'Send OTP & Continue'}
                 </button>
               </div>
             </div>
           )}
 
           {step === 3 && (
-            <div className="text-center animate-fade-up py-8">
-              <div className="d-flex justify-center mb-6">
-                <div className="p-5 bg-green-50 text-primary rounded-full shadow-sm" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
-                  <Check size={56} strokeWidth={2.5} />
-                </div>
+            <div className="animate-fade-up text-center">
+              <h2 className="text-2xl font-bold mb-3">Email Verification</h2>
+              <p className="text-muted mb-6">We've sent a 6-digit OTP to <strong>{formData.email}</strong>.</p>
+              
+              <div className="form-group mb-8 max-w-xs mx-auto text-left">
+                <label className="form-label">Enter OTP</label>
+                <input 
+                  type="text" 
+                  name="otp" 
+                  className="form-input text-center text-xl tracking-[0.5em]" 
+                  value={formData.otp} 
+                  onChange={handleChange} 
+                  maxLength={6} 
+                  placeholder="------" 
+                />
               </div>
-              <h2 className="text-3xl font-bold mb-3">Check your email</h2>
-              <p className="text-subheading mb-8 mx-auto" style={{ maxWidth: '400px' }}>
-                We've sent a verification link to <span className="text-main font-medium">{formData.email}</span>. Please verify your email to access your account.
-              </p>
-              <button type="button" className="btn btn-primary btn-large w-full justify-center" onClick={() => navigate('/login')}>
-                Go to Sign In
-              </button>
+
+              <div className="d-flex gap-4">
+                <button type="button" className="btn btn-secondary btn-large" onClick={() => setStep(2)}>
+                  Back
+                </button>
+                <button type="button" className="btn btn-primary btn-large flex-1 justify-center" onClick={handleRegister} disabled={isSubmitting}>
+                  {isSubmitting ? 'Verifying & Registering...' : 'Complete Registration'}
+                </button>
+              </div>
             </div>
           )}
 

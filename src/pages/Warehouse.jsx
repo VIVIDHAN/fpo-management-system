@@ -68,10 +68,10 @@ const Warehouse = () => {
 
   return (
     <div>
-      <div className="d-flex justify-between align-center mb-6">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold">Warehouse Management</h1>
-          <p className="text-muted mt-1">Manage storage facilities, capacity, and current stock.</p>
+          <h1 className="page-title">Warehouse Management</h1>
+          <p className="page-subtitle">Manage storage facilities, capacity, and current stock.</p>
         </div>
         
         {['Admin', 'FPO Manager'].includes(user?.role) && (
@@ -95,7 +95,7 @@ const Warehouse = () => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
         {filtered.map(w => (
-          <div key={w.id} className="glass-card">
+          <div key={w.id} className="card-panel p-5 animate-fade-up">
             <div className="d-flex justify-between align-start mb-4">
               <div className="d-flex align-center gap-2">
                 <div className="p-2 bg-primary-light text-primary rounded-md">

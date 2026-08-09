@@ -1,18 +1,17 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import './Dashboard.css'; // Essential for dashboard styling!
 
 const DashboardLayout = () => {
   return (
-    <div className="d-flex" style={{ minHeight: '100vh' }}>
-      <div className="p-4" style={{ height: '100vh', position: 'sticky', top: 0 }}>
-        <Sidebar />
-      </div>
-      <div className="flex-1 p-6" style={{ overflowY: 'auto', height: '100vh' }}>
+    <div className="dashboard-layout">
+      <Sidebar />
+      <main className="dashboard-main">
         <div className="container animate-fade-in-up">
           <Outlet />
         </div>
-      </div>
+      </main>
     </div>
   );
 };

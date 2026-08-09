@@ -18,9 +18,9 @@ const DashboardOverview = () => {
 
     if (isAdmin) {
       return (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 animate-fade-in-up delay-100">
-          <div className="glass-card d-flex align-center gap-3">
-            <div className="p-3 bg-primary-light text-primary rounded-full">
+        <div className="stat-grid animate-fade-up">
+          <div className="stat-card">
+            <div className="stat-icon bg-primary-light text-primary">
               <Users size={24} />
             </div>
             <div>
@@ -29,8 +29,8 @@ const DashboardOverview = () => {
             </div>
           </div>
           
-          <div className="glass-card d-flex align-center gap-3">
-            <div className="p-3 bg-secondary-light text-secondary rounded-full">
+          <div className="stat-card">
+            <div className="stat-icon bg-secondary-light text-secondary">
               <IndianRupee size={24} />
             </div>
             <div>
@@ -39,8 +39,8 @@ const DashboardOverview = () => {
             </div>
           </div>
           
-          <div className="glass-card d-flex align-center gap-3">
-            <div className="p-3 bg-success-light text-success rounded-full">
+          <div className="stat-card">
+            <div className="stat-icon bg-success-light text-success">
               <TrendingUp size={24} />
             </div>
             <div>
@@ -49,8 +49,8 @@ const DashboardOverview = () => {
             </div>
           </div>
 
-          <div className="glass-card d-flex align-center gap-3">
-            <div className="p-3 bg-accent-light text-accent rounded-full">
+          <div className="stat-card">
+            <div className="stat-icon bg-accent-light text-accent">
               <Warehouse size={24} />
             </div>
             <div>
@@ -67,18 +67,24 @@ const DashboardOverview = () => {
       const totalSold = personalTx.reduce((acc, curr) => acc + curr.totalAmount, 0);
 
       return (
-        <div className="grid md:grid-cols-3 gap-4 mt-6 animate-fade-in-up delay-100">
-          <div className="glass-card">
-            <p className="text-sm text-muted font-medium">My Transactions</p>
-            <h3 className="text-2xl font-bold text-primary">{personalTx.length}</h3>
+        <div className="stat-grid animate-fade-up">
+          <div className="stat-card">
+            <div>
+              <p className="text-sm text-muted font-medium">My Transactions</p>
+              <h3 className="text-2xl font-bold text-primary">{personalTx.length}</h3>
+            </div>
           </div>
-          <div className="glass-card">
-            <p className="text-sm text-muted font-medium">Total Amount Received</p>
-            <h3 className="text-2xl font-bold text-secondary">₹{totalSold.toLocaleString()}</h3>
+          <div className="stat-card">
+            <div>
+              <p className="text-sm text-muted font-medium">Total Amount Received</p>
+              <h3 className="text-2xl font-bold text-secondary">₹{totalSold.toLocaleString()}</h3>
+            </div>
           </div>
-          <div className="glass-card">
-            <p className="text-sm text-muted font-medium">Share Capital</p>
-            <h3 className="text-2xl font-bold text-success">₹5,000</h3>
+          <div className="stat-card">
+            <div>
+              <p className="text-sm text-muted font-medium">Share Capital</p>
+              <h3 className="text-2xl font-bold text-success">₹5,000</h3>
+            </div>
           </div>
         </div>
       );
@@ -89,42 +95,53 @@ const DashboardOverview = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">{getGreeting()}, {user?.name}!</h1>
-        <p className="text-muted mt-2">Welcome to your {user?.role} dashboard.</p>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{getGreeting()}, {user?.name}!</h1>
+          <p className="page-subtitle">Welcome to your {user?.role} dashboard.</p>
+        </div>
       </div>
       
       {renderKPICards()}
       
       {['Admin', 'FPO Manager'].includes(user?.role) && (
-        <div className="mt-8 grid md:grid-cols-2 gap-6 animate-fade-in-up delay-200">
-          <div className="glass-card p-6">
-            <h3 className="text-xl font-semibold mb-4">Recent Procurements</h3>
-            <div className="flex-column gap-3">
-              {mockProcurements.slice(0, 3).map(p => (
-                <div key={p.id} className="d-flex justify-between align-center p-3 border-b border-color">
-                  <div>
-                    <p className="font-medium">{p.memberName}</p>
-                    <p className="text-xs text-muted">{p.commodity} - {p.quantityKg}kg</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">₹{p.totalAmount}</p>
-                    <span className={`badge ${p.paymentStatus === 'PAID' ? 'badge-success' : 'badge-warning'}`}>{p.paymentStatus}</span>
-                  </div>
-                </div>
-              ))}
+        <div className="grid md:grid-cols-2 gap-6 mt-8 animate-fade-up delay-200">
+          <div className="card-panel">
+            <div className="card-header">
+              <h3 className="card-title">Recent Procurements</h3>
+            </div>
+            <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+              <table className="data-table">
+                <tbody>
+                  {mockProcurements.slice(0, 4).map(p => (
+                    <tr key={p.id}>
+                      <td>
+                        <div className="font-medium text-main">{p.memberName}</div>
+                        <div className="text-xs text-muted">{p.commodity} - {p.quantityKg}kg</div>
+                      </td>
+                      <td className="text-right">
+                        <div className="font-bold">₹{p.totalAmount}</div>
+                        <span className={`badge ${p.paymentStatus === 'PAID' ? 'badge-success' : 'badge-warning'} mt-2`}>{p.paymentStatus}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-          <div className="glass-card p-6">
-            <h3 className="text-xl font-semibold mb-4">System Alerts</h3>
-            <div className="flex-column gap-3">
-              <div className="p-3 bg-accent-light text-accent rounded-md border-l-4" style={{ borderColor: 'var(--accent)' }}>
-                <p className="font-medium">Warehouse Capacity Warning</p>
-                <p className="text-sm">Wada Facility is at 97.5% capacity.</p>
+          
+          <div className="card-panel">
+            <div className="card-header">
+              <h3 className="card-title">System Alerts</h3>
+            </div>
+            <div className="card-body">
+              <div className="alert-box alert-warning">
+                <p className="font-medium text-accent">Warehouse Capacity Warning</p>
+                <p className="text-sm text-muted mt-1">Wada Facility is at 97.5% capacity.</p>
               </div>
-              <div className="p-3 bg-danger-light text-danger rounded-md border-l-4" style={{ borderColor: 'var(--danger)' }}>
-                <p className="font-medium">Pending Payments</p>
-                <p className="text-sm">3 members waiting for procurement payments.</p>
+              <div className="alert-box alert-danger">
+                <p className="font-medium text-danger">Pending Payments</p>
+                <p className="text-sm text-muted mt-1">3 members waiting for procurement payments.</p>
               </div>
             </div>
           </div>

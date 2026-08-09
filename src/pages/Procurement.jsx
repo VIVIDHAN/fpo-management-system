@@ -64,10 +64,10 @@ const Procurement = () => {
 
   return (
     <div>
-      <div className="d-flex justify-between align-center mb-6">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold">Procurement</h1>
-          <p className="text-muted mt-1">Manage collective input and produce aggregation.</p>
+          <h1 className="page-title">Procurement</h1>
+          <p className="page-subtitle">Manage collective input and produce aggregation.</p>
         </div>
         
         {['Admin', 'FPO Manager', 'Collection Agent'].includes(user?.role) && (
@@ -77,20 +77,22 @@ const Procurement = () => {
         )}
       </div>
 
-      <div className="glass-card mb-6 animate-fade-in-up">
-        <div className="mb-4 relative w-full max-w-md">
-          <Search className="absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} size={18} />
-          <input 
-            type="text" 
-            className="form-input" 
-            style={{ paddingLeft: '2.5rem' }} 
-            placeholder="Search by member or commodity..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="card-panel mb-6 animate-fade-up">
+        <div className="card-body">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} size={18} />
+            <input 
+              type="text" 
+              className="form-input" 
+              style={{ paddingLeft: '2.5rem' }} 
+              placeholder="Search by member or commodity..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="table-container">
+        <div className="table-container" style={{ border: 'none', borderTop: '1px solid var(--border-color)', borderRadius: 0 }}>
           <table className="data-table">
             <thead>
               <tr>

@@ -5,7 +5,7 @@ import { Leaf, Mail, Lock, ArrowRight } from 'lucide-react';
 
 const Login = () => {
   const [identifier, setIdentifier] = useState('admin@fpo.com');
-  const [password, setPassword] = useState('Password@123');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -82,6 +82,12 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit}>
+            {location.state?.message && !error && (
+              <div className="p-3 mb-6 bg-green-50 text-green-700 rounded-md text-sm border border-green-200">
+                {location.state.message}
+              </div>
+            )}
+            
             {error && (
               <div className="p-3 mb-6 bg-red-50 text-red-600 rounded-md text-sm border border-red-200">
                 {error}
@@ -130,13 +136,6 @@ const Login = () => {
 
           <div className="mt-8 text-center text-small text-muted">
             <p>Don't have an account? <span className="text-primary cursor-pointer font-medium hover:underline" onClick={() => navigate('/register')}>Request Access</span></p>
-            
-            <div className="mt-8 pt-6 border-t border-color text-xs">
-              <p className="font-medium text-main mb-2">Test Accounts (Password: Password@123)</p>
-              <p>Admin: <span className="text-primary">admin@fpo.com</span></p>
-              <p>Manager: <span className="text-primary">manager@fpo.com</span></p>
-              <p>Member: <span className="text-primary">member@fpo.com</span></p>
-            </div>
           </div>
 
         </div>

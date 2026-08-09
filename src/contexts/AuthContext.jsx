@@ -8,13 +8,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Check local storage for mocked session
-    const storedUser = localStorage.getItem('fpo_mock_user');
-    if (storedUser) {
+    const storedUser = localStorage.getItem('fpo_user');
+    const token = localStorage.getItem('fpo_token');
+    if (storedUser && token) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
-        localStorage.removeItem('fpo_mock_user');
+        localStorage.removeItem('fpo_user');
+        localStorage.removeItem('fpo_token');
       }
     }
     setLoading(false);
@@ -22,39 +23,40 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     setLoading(true);
-    // Mock API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     const { identifier, password } = credentials;
     
-    // MOCK ACCOUNTS
-    const mockAccounts = {
-      'admin': { id: 'U001', name: 'System Admin', email: 'admin@fpo.com', role: 'Admin', phone: '9876543210' },
-      'manager': { id: 'U002', name: 'FPO Manager', email: 'manager@fpo.com', role: 'FPO Manager', phone: '8765432109' },
-      'board': { id: 'U003', name: 'Board Member', email: 'board@fpo.com', role: 'Board Member', phone: '7654321098' },
-      'agent': { id: 'U004', name: 'Collection Agent', email: 'agent@fpo.com', role: 'Collection Agent', phone: '6543210987' },
-      'member': { id: 'M001', name: 'Farmer John', email: 'member@fpo.com', role: 'Member', phone: '5432109876', memberId: 'FPO-M-1001' },
-      'guest': { id: 'G001', name: 'Guest User', email: 'guest@fpo.com', role: 'Guest', phone: '4321098765' }
-    };
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: identifier, password }),
+      });
 
-    const userKey = identifier.split('@')[0].toLowerCase();
-    
-    // Simple mock check
-    if (mockAccounts[userKey] && password === 'Password@123') {
-      const userData = mockAccounts[userKey];
-      setUser(userData);
-      localStorage.setItem('fpo_mock_user', JSON.stringify(userData));
+      const data = await response.json();
+
+      if (response.ok) {
+        const userData = { name: data.name, role: data.role, phone: identifier };
+        setUser(userData);
+        localStorage.setItem('fpo_user', JSON.stringify(userData));
+        localStorage.setItem('fpo_token', data.token);
+        setLoading(false);
+        return { success: true, user: userData };
+      } else {
+        setLoading(false);
+        return { success: false, message: data.error || 'Login failed' };
+      }
+    } catch (err) {
       setLoading(false);
-      return { success: true, user: userData };
+      return { success: false, message: 'Network error connecting to backend' };
     }
-    
-    setLoading(false);
-    return { success: false, message: 'Invalid credentials. Please use an admin, manager, board, agent, member, or guest account with Password@123' };
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('fpo_mock_user');
+    localStorage.removeItem('fpo_user');
+    localStorage.removeItem('fpo_token');
   };
 
   return (
