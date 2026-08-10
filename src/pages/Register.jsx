@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Leaf, ArrowRight, Check } from 'lucide-react';
+import { Leaf, ArrowRight, Check, ArrowLeft, Loader2 } from 'lucide-react';
 import { validateName, validateEmail, validatePhone, validatePassword } from '../utils/validators';
 
 const Register = () => {
@@ -116,112 +116,106 @@ const Register = () => {
   };
 
   return (
-    <div className="d-flex justify-center align-center min-h-screen bg-auth py-12 px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#f5f5f7] flex flex-col justify-center items-center p-4 font-sans selection:bg-green-100">
       
-      {/* Decorative background blobs */}
-      <div className="absolute rounded-full bg-primary" style={{ opacity: 0.05, width: '500px', height: '500px', top: '-100px', left: '-100px' }}></div>
-      <div className="absolute rounded-full" style={{ background: 'var(--secondary)', opacity: 0.04, width: '400px', height: '400px', bottom: '-100px', right: '-100px' }}></div>
+      <div className="absolute top-8 left-8 flex items-center gap-2 cursor-pointer transition hover:opacity-70" onClick={() => navigate('/')}>
+        <Leaf size={24} className="text-green-600" />
+        <span className="text-xl font-semibold tracking-tight text-gray-900">AgriCoop</span>
+      </div>
 
-      {/* Constrained 650px container */}
-      <div className="w-full animate-fade-up z-10" style={{ maxWidth: '650px' }}>
+      <div className="w-full max-w-[600px] animate-fade-up my-12">
         
-        <div className="text-center mb-8">
-          <div className="d-flex justify-center align-center mb-4 cursor-pointer" onClick={() => navigate('/')}>
-            <Leaf size={40} className="text-primary" />
-          </div>
-          <h1 className="text-4xl font-bold mb-3">Create your account</h1>
-          <p className="text-subheading">Join the leading platform for Farmer Producer Organizations.</p>
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mb-2">Create your account</h1>
+          <p className="text-gray-500 text-sm">Join the leading platform for Farmer Producer Organizations.</p>
         </div>
 
-        <div className="saas-card" style={{ padding: '2.5rem' }}>
+        <div className="bg-white/80 backdrop-blur-xl p-8 sm:p-12 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50">
           
-          {/* Elegant Stepper */}
-          <div className="d-flex justify-between mb-10 relative px-4">
-            <div className="absolute" style={{ top: '16px', left: '15%', right: '15%', height: '2px', background: 'var(--border-color)', zIndex: 0 }}></div>
+          {/* Apple-style Stepper */}
+          <div className="flex justify-between items-center mb-10 relative">
+            <div className="absolute top-1/2 left-[10%] right-[10%] h-[2px] bg-gray-100 -z-10 -translate-y-1/2"></div>
             {[1, 2, 3].map((num) => (
-              <div key={num} className="d-flex flex-column align-center relative" style={{ zIndex: 1 }}>
-                <div 
-                  className={`d-flex justify-center align-center rounded-full mb-3 transition-normal ${step >= num ? 'text-white' : 'bg-white text-muted border-color'}`} 
-                  style={{ 
-                    width: '34px', height: '34px', 
-                    background: step >= num ? 'var(--primary)' : 'white',
-                    border: step >= num ? 'none' : '2px solid var(--border-color)',
-                    boxShadow: step >= num ? '0 0 10px var(--primary-glow)' : 'none'
-                  }}>
-                  {step > num ? <Check size={18} strokeWidth={3} /> : <span className="font-semibold text-sm">{num}</span>}
+              <div key={num} className="flex flex-col items-center bg-white px-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
+                  step > num ? 'bg-green-500 text-white shadow-sm' : 
+                  step === num ? 'border-2 border-gray-900 text-gray-900 shadow-sm' : 
+                  'bg-gray-100 text-gray-400'
+                }`}>
+                  {step > num ? <Check size={16} strokeWidth={3} /> : <span className="font-semibold text-xs">{num}</span>}
                 </div>
-                <span className={`text-sm font-medium ${step >= num ? 'text-main' : 'text-muted'}`}>
-                  {num === 1 ? 'Personal Details' : num === 2 ? 'Security Setup' : 'Verification'}
+                <span className={`text-xs font-medium transition-colors ${step >= num ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {num === 1 ? 'Details' : num === 2 ? 'Security' : 'Verify'}
                 </span>
               </div>
             ))}
           </div>
 
           {errors.submit && (
-            <div className="p-3 mb-6 bg-red-50 text-red-600 rounded-md text-sm border border-red-200 text-center">
+            <div className="p-3 mb-6 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100 text-center animate-shake">
               {errors.submit}
             </div>
           )}
 
           {step === 1 && (
-            <div className="animate-fade-up">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label className="form-label">Full Name</label>
-                  <input type="text" name="name" className={`form-input ${errors.name ? 'error' : ''}`} value={formData.name} onChange={handleChange} placeholder="e.g. John Doe" />
-                  {errors.name && <p className="form-error">{errors.name}</p>}
+            <div className="space-y-6 animate-fade-up">
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Full Name</label>
+                  <input type="text" name="name" className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:bg-white transition-all ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-green-500'}`} value={formData.name} onChange={handleChange} placeholder="e.g. John Doe" />
+                  {errors.name && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.name}</p>}
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Phone Number</label>
-                  <input type="tel" name="phone" className={`form-input ${errors.phone ? 'error' : ''}`} value={formData.phone} onChange={handleChange} placeholder="10-digit mobile" />
-                  {errors.phone && <p className="form-error">{errors.phone}</p>}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Phone Number</label>
+                  <input type="tel" name="phone" className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:bg-white transition-all ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-green-500'}`} value={formData.phone} onChange={handleChange} placeholder="10-digit mobile" />
+                  {errors.phone && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.phone}</p>}
                 </div>
               </div>
               
-              <div className="form-group">
-                <label className="form-label">Work Email Address</label>
-                <input type="email" name="email" className={`form-input ${errors.email ? 'error' : ''}`} value={formData.email} onChange={handleChange} placeholder="john@cooperative.com" />
-                {errors.email && <p className="form-error">{errors.email}</p>}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Email Address</label>
+                <input type="email" name="email" className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:bg-white transition-all ${errors.email ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-green-500'}`} value={formData.email} onChange={handleChange} placeholder="john@cooperative.com" />
+                {errors.email && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.email}</p>}
               </div>
               
-              <div className="form-group">
-                <label className="form-label">Requested Role</label>
-                <select name="role" className="form-input" value={formData.role} onChange={handleChange}>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Requested Role</label>
+                <select name="role" className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200/60 rounded-2xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 focus:bg-white transition-all appearance-none" value={formData.role} onChange={handleChange}>
                   <option value="Member">Farmer Member</option>
                   <option value="Collection Agent">Collection Agent</option>
                   <option value="FPO Manager">FPO Manager</option>
                 </select>
               </div>
 
-              <div className="d-flex justify-end mt-8">
-                <button type="button" className="btn btn-primary btn-large" onClick={handleNext}>
-                  Continue to Security <ArrowRight size={20} />
+              <div className="pt-4 flex justify-end">
+                <button type="button" className="flex items-center gap-2 px-8 py-3.5 bg-gray-900 hover:bg-black text-white font-medium rounded-full transition-transform active:scale-[0.98] shadow-sm" onClick={handleNext}>
+                  <span>Continue</span> <ArrowRight size={18} />
                 </button>
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="animate-fade-up">
-              <div className="form-group">
-                <label className="form-label">Create Password</label>
-                <input type="password" name="password" className={`form-input ${errors.password ? 'error' : ''}`} value={formData.password} onChange={handleChange} placeholder="••••••••" />
-                {errors.password && <p className="form-error">{errors.password}</p>}
-                <p className="text-xs text-muted mt-2">Minimum 8 characters containing uppercase, lowercase, number, and special character.</p>
+            <div className="space-y-6 animate-fade-up">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Create Password</label>
+                <input type="password" name="password" className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:bg-white transition-all ${errors.password ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-green-500'}`} value={formData.password} onChange={handleChange} placeholder="••••••••" />
+                {errors.password && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.password}</p>}
+                <p className="text-[11px] text-gray-400 mt-2 ml-1">Minimum 8 characters containing uppercase, lowercase, number, and special character.</p>
               </div>
               
-              <div className="form-group mb-8">
-                <label className="form-label">Confirm Password</label>
-                <input type="password" name="confirmPassword" className={`form-input ${errors.confirmPassword ? 'error' : ''}`} value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" />
-                {errors.confirmPassword && <p className="form-error">{errors.confirmPassword}</p>}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Confirm Password</label>
+                <input type="password" name="confirmPassword" className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:bg-white transition-all ${errors.confirmPassword ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-green-500'}`} value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" />
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.confirmPassword}</p>}
               </div>
 
-              <div className="d-flex gap-4">
-                <button type="button" className="btn btn-secondary btn-large" onClick={() => setStep(1)}>
-                  Back
+              <div className="pt-4 flex gap-3">
+                <button type="button" className="flex items-center gap-2 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-full transition-colors" onClick={() => setStep(1)}>
+                  <ArrowLeft size={18} />
                 </button>
-                <button type="button" className="btn btn-primary btn-large flex-1 justify-center" onClick={handleSendOtp} disabled={isSubmitting}>
-                  {isSubmitting ? 'Sending OTP...' : 'Send OTP & Continue'}
+                <button type="button" className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-900 hover:bg-black text-white font-medium rounded-full transition-transform active:scale-[0.98] disabled:opacity-70 shadow-sm" onClick={handleSendOtp} disabled={isSubmitting}>
+                  {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : 'Send OTP'}
                 </button>
               </div>
             </div>
@@ -229,28 +223,31 @@ const Register = () => {
 
           {step === 3 && (
             <div className="animate-fade-up text-center">
-              <h2 className="text-2xl font-bold mb-3">Email Verification</h2>
-              <p className="text-muted mb-6">We've sent a 6-digit OTP to <strong>{formData.email}</strong>.</p>
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <Mail size={32} />
+              </div>
+              <h2 className="text-2xl font-semibold tracking-tight text-gray-900 mb-2">Check your email</h2>
+              <p className="text-gray-500 text-sm mb-8">We've sent a verification code to <strong className="text-gray-900 font-semibold">{formData.email}</strong>.</p>
               
-              <div className="form-group mb-8 max-w-xs mx-auto text-left">
-                <label className="form-label">Enter OTP</label>
+              <div className="max-w-[240px] mx-auto text-left mb-8">
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Verification Code</label>
                 <input 
                   type="text" 
                   name="otp" 
-                  className="form-input text-center text-xl tracking-[0.5em]" 
+                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200/60 rounded-2xl text-center text-xl tracking-[0.5em] text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 focus:bg-white transition-all font-mono" 
                   value={formData.otp} 
                   onChange={handleChange} 
                   maxLength={6} 
-                  placeholder="------" 
+                  placeholder="000000" 
                 />
               </div>
 
-              <div className="d-flex gap-4">
-                <button type="button" className="btn btn-secondary btn-large" onClick={() => setStep(2)}>
-                  Back
+              <div className="flex gap-3">
+                <button type="button" className="flex items-center justify-center px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-full transition-colors" onClick={() => setStep(2)}>
+                   <ArrowLeft size={18} />
                 </button>
-                <button type="button" className="btn btn-primary btn-large flex-1 justify-center" onClick={handleRegister} disabled={isSubmitting}>
-                  {isSubmitting ? 'Verifying & Registering...' : 'Complete Registration'}
+                <button type="button" className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-full transition-transform active:scale-[0.98] disabled:opacity-70 shadow-sm" onClick={handleRegister} disabled={isSubmitting}>
+                  {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Verifying...</> : 'Complete Registration'}
                 </button>
               </div>
             </div>
@@ -259,8 +256,13 @@ const Register = () => {
         </div>
 
         {step < 3 && (
-          <div className="mt-8 text-center text-sm font-medium">
-            <span className="text-muted">Already have an account?</span> <span className="text-primary cursor-pointer hover:underline ml-1" onClick={() => navigate('/login')}>Sign in instead</span>
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500">
+              Already have an account?{' '}
+              <span className="font-semibold text-gray-900 cursor-pointer hover:underline" onClick={() => navigate('/login')}>
+                Sign in instead
+              </span>
+            </p>
           </div>
         )}
       </div>

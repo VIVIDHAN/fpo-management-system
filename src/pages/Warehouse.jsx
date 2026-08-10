@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockWarehouses } from '../utils/mockData';
-import { Plus, Search, MapPin } from 'lucide-react';
+import { Plus, Search, MapPin, X } from 'lucide-react';
 import { validateQuantity, validateName } from '../utils/validators';
 
 const Warehouse = () => {
@@ -59,34 +59,36 @@ const Warehouse = () => {
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'ACTIVE': return 'badge-success';
-      case 'FULL': return 'badge-danger';
-      case 'MAINTENANCE': return 'badge-warning';
-      default: return 'badge-primary';
+      case 'ACTIVE': return 'bg-green-50 text-green-700';
+      case 'FULL': return 'bg-red-50 text-red-700';
+      case 'MAINTENANCE': return 'bg-amber-50 text-amber-700';
+      default: return 'bg-blue-50 text-blue-700';
     }
   };
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="pb-10">
+      
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pt-4">
         <div>
-          <h1 className="page-title">Warehouse Management</h1>
-          <p className="page-subtitle">Manage storage facilities, capacity, and current stock.</p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Warehouse Management</h1>
+          <p className="text-gray-500 font-medium">Manage storage facilities, capacity, and current stock.</p>
         </div>
         
         {['Admin', 'FPO Manager'].includes(user?.role) && (
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-            <Plus size={18} /> Add Facility
-          </button>
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white font-medium rounded-xl hover:bg-black transition-colors shadow-sm" onClick={() => setShowAddModal(true)}>
+              <Plus size={18} /> <span>Add Facility</span>
+            </button>
+          </div>
         )}
       </div>
 
-      <div className="mb-6 relative w-full max-w-md animate-fade-in-down">
-        <Search className="absolute text-muted" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} size={18} />
+      <div className="mb-8 relative w-full max-w-md animate-fade-in-down">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
         <input 
           type="text" 
-          className="form-input" 
-          style={{ paddingLeft: '2.5rem' }} 
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200/60 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all shadow-sm"
           placeholder="Search by location or commodity..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -94,89 +96,103 @@ const Warehouse = () => {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
-        {filtered.map(w => (
-          <div key={w.id} className="card-panel p-5 animate-fade-up">
-            <div className="d-flex justify-between align-start mb-4">
-              <div className="d-flex align-center gap-2">
-                <div className="p-2 bg-primary-light text-primary rounded-md">
-                  <MapPin size={20} />
+        {filtered.map(w => {
+          const utilization = (w.currentStockMt / w.capacityMt) * 100;
+          return (
+            <div key={w.id} className="bg-white rounded-3xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-200/50 p-6 flex flex-col hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow">
+              
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 tracking-tight">{w.location}</h3>
+                    <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider mt-1 ${getStatusColor(w.status)}`}>
+                      {w.status}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{w.location}</h3>
-                  <span className={`badge ${getStatusColor(w.status)}`}>{w.status}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex-column gap-3">
-              <div className="d-flex justify-between border-b pb-2" style={{ borderBottom: '1px solid var(--border-color)'}}>
-                <span className="text-muted">Stored Commodity</span>
-                <span className="font-medium">{w.commodity}</span>
-              </div>
-              <div className="d-flex justify-between border-b pb-2" style={{ borderBottom: '1px solid var(--border-color)'}}>
-                <span className="text-muted">Current Stock (MT)</span>
-                <span className="font-bold text-primary">{w.currentStockMt}</span>
-              </div>
-              <div className="d-flex justify-between border-b pb-2" style={{ borderBottom: '1px solid var(--border-color)'}}>
-                <span className="text-muted">Total Capacity (MT)</span>
-                <span className="font-medium">{w.capacityMt}</span>
               </div>
               
-              <div className="mt-2">
-                <div className="d-flex justify-between text-xs mb-1">
-                  <span>Utilization</span>
-                  <span>{((w.currentStockMt / w.capacityMt) * 100).toFixed(1)}%</span>
+              <div className="space-y-4 flex-1">
+                <div className="flex justify-between pb-3 border-b border-gray-100">
+                  <span className="text-sm font-medium text-gray-500">Commodity</span>
+                  <span className="text-sm font-semibold text-gray-900">{w.commodity}</span>
                 </div>
-                <div className="w-full bg-border-color rounded-full h-2" style={{ background: 'var(--border-color)'}}>
-                  <div 
-                    className="h-full rounded-full bg-primary transition-slow" 
-                    style={{ width: `${(w.currentStockMt / w.capacityMt) * 100}%`, background: w.status === 'FULL' ? 'var(--danger)' : 'var(--primary)' }}
-                  ></div>
+                <div className="flex justify-between pb-3 border-b border-gray-100">
+                  <span className="text-sm font-medium text-gray-500">Current Stock (MT)</span>
+                  <span className="text-sm font-bold text-gray-900">{w.currentStockMt}</span>
+                </div>
+                <div className="flex justify-between pb-3 border-b border-gray-100">
+                  <span className="text-sm font-medium text-gray-500">Total Capacity (MT)</span>
+                  <span className="text-sm font-semibold text-gray-900">{w.capacityMt}</span>
+                </div>
+                
+                <div className="pt-2">
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Utilization</span>
+                    <span className="text-sm font-bold text-gray-900">{utilization.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${w.status === 'FULL' ? 'bg-red-500' : 'bg-gray-900'}`} 
+                      style={{ width: `${Math.min(utilization, 100)}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         
         {filtered.length === 0 && (
-          <div className="col-span-full text-center py-8 text-muted">
-            No warehouses found matching your search.
+          <div className="col-span-full text-center py-12">
+             <p className="text-gray-400 text-sm">No warehouses found matching "{searchTerm}"</p>
           </div>
         )}
       </div>
 
+      {/* Add Modal */}
       {showAddModal && (
-        <div className="absolute d-flex justify-center align-center" style={{ top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, position: 'fixed' }}>
-          <div className="glass-card bg-white p-6 w-full max-w-lg animate-fade-in-up">
-            <h2 className="text-2xl font-bold mb-4">Add Warehouse Facility</h2>
-            <form onSubmit={handleAddSubmit}>
-              <div className="form-group">
-                <label className="form-label">Location Name</label>
-                <input type="text" className={`form-input ${errors.location ? 'error' : ''}`} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="e.g. Pune Central Hub" />
-                {errors.location && <p className="form-error">{errors.location}</p>}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/20 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900">Add Warehouse Facility</h2>
+              <button onClick={() => setShowAddModal(false)} className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Location Name</label>
+                <input type="text" className={`w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:bg-white transition-all ${errors.location ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-gray-900'}`} value={formData.location} onChange={e => {setFormData({...formData, location: e.target.value}); setErrors({...errors, location: null})}} placeholder="e.g. Pune Central Hub" />
+                {errors.location && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.location}</p>}
               </div>
               
-              <div className="form-group">
-                <label className="form-label">Supported Commodity</label>
-                <input type="text" className="form-input" value={formData.commodity} onChange={e => setFormData({...formData, commodity: e.target.value})} placeholder="e.g. Rice, Wheat or Mixed" />
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Supported Commodity</label>
+                <input type="text" className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/60 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 focus:bg-white transition-all" value={formData.commodity} onChange={e => setFormData({...formData, commodity: e.target.value})} placeholder="e.g. Rice, Wheat or Mixed" />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-2">
-                <div className="form-group">
-                  <label className="form-label">Capacity (MT)</label>
-                  <input type="number" className={`form-input ${errors.capacityMt ? 'error' : ''}`} value={formData.capacityMt} onChange={e => setFormData({...formData, capacityMt: e.target.value})} />
-                  {errors.capacityMt && <p className="form-error">{errors.capacityMt}</p>}
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Capacity (MT)</label>
+                  <input type="number" className={`w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:bg-white transition-all ${errors.capacityMt ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-gray-900'}`} value={formData.capacityMt} onChange={e => {setFormData({...formData, capacityMt: e.target.value}); setErrors({...errors, capacityMt: null})}} />
+                  {errors.capacityMt && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.capacityMt}</p>}
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Initial Stock (MT)</label>
-                  <input type="number" className={`form-input ${errors.currentStockMt ? 'error' : ''}`} value={formData.currentStockMt} onChange={e => setFormData({...formData, currentStockMt: e.target.value})} />
-                  {errors.currentStockMt && <p className="form-error">{errors.currentStockMt}</p>}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Initial Stock (MT)</label>
+                  <input type="number" className={`w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:bg-white transition-all ${errors.currentStockMt ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-gray-900'}`} value={formData.currentStockMt} onChange={e => {setFormData({...formData, currentStockMt: e.target.value}); setErrors({...errors, currentStockMt: null})}} />
+                  {errors.currentStockMt && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.currentStockMt}</p>}
                 </div>
               </div>
 
-              <div className="d-flex justify-end gap-2 mt-6">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Add Facility</button>
+              <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">
+                <button type="button" className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm rounded-full transition-colors" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="px-5 py-2.5 bg-gray-900 hover:bg-black text-white font-medium text-sm rounded-full transition-colors shadow-sm">Add Facility</button>
               </div>
             </form>
           </div>
