@@ -1,0 +1,9 @@
+/* Sidebar.css - Custom sidebar styles */
+.sidebar-active {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+.sidebar-link {
+  transition: all 0.2s ease-in-out;
+}

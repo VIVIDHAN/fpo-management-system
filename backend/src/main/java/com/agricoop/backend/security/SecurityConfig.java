@@ -1,4 +1,5 @@
 package com.agricoop.backend.security;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +27,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
+            .headers().frameOptions().disable()
+            .and()
             .authorizeHttpRequests()
-            .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+            .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/h2-console/**", "/api/members/**", "/api/procurements/**", "/api/sales-orders/**", "/api/warehouse/**", "/api/users/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .sessionManagement()

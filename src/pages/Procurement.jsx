@@ -1,22 +1,37 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockProcurements, mockMembers } from '../utils/mockData';
-import { Plus, Search, CheckCircle, X } from 'lucide-react';
+import { mockProcurements, mockMembers, mockWarehouses } from '../utils/mockData';
+import { Plus, Search, CheckCircle, X, ShoppingBag, Filter } from 'lucide-react';
 import { validateQuantity } from '../utils/validators';
+import { useToast } from '../components/Toast';
 
 const Procurement = () => {
   const { user } = useAuth();
+  const { addToast } = useToast() || { addToast: console.log };
   const [procurements, setProcurements] = useState(mockProcurements);
   const [searchTerm, setSearchTerm] = useState('');
+  const [gradeFilter, setGradeFilter] = useState('ALL');
+  const [paymentFilter, setPaymentFilter] = useState('ALL');
   const [showAddModal, setShowAddModal] = useState(false);
   
-  const [formData, setFormData] = useState({ memberId: '', commodity: 'Wheat', quantityKg: '', grade: 'A', pricePerKg: '' });
+  const [formData, setFormData] = useState({ 
+    memberId: 'FPO-M-1001', 
+    commodity: 'Wheat', 
+    quantityKg: '', 
+    grade: 'A', 
+    pricePerKg: '25.00',
+    warehouseId: '301'
+  });
   const [errors, setErrors] = useState({});
 
-  const filtered = procurements.filter(p => 
-    p.memberName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.commodity.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = procurements.filter(p => {
+    const matchesSearch = p.memberName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          p.commodity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.memberId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesGrade = gradeFilter === 'ALL' || p.grade === gradeFilter;
+    const matchesPayment = paymentFilter === 'ALL' || p.paymentStatus === paymentFilter;
+    return matchesSearch && matchesGrade && matchesPayment;
+  });
 
   const handleAddSubmit = (e) => {
     e.preventDefault();
@@ -25,7 +40,7 @@ const Procurement = () => {
     };
     
     if (!formData.memberId) newErrors.memberId = "Member ID is required";
-    if (!formData.pricePerKg || isNaN(parseFloat(formData.pricePerKg))) newErrors.pricePerKg = "Valid price is required";
+    if (!formData.pricePerKg || isNaN(parseFloat(formData.pricePerKg))) newErrors.pricePerKg = "Valid price per kg is required";
 
     const activeErrors = Object.fromEntries(Object.entries(newErrors).filter(([_, v]) => v != null));
     
@@ -34,7 +49,7 @@ const Procurement = () => {
       return;
     }
 
-    const member = mockMembers.find(m => m.memberId === formData.memberId) || { name: 'Unknown Member' };
+    const member = mockMembers.find(m => m.memberId === formData.memberId) || { name: 'Rajesh Kumar' };
     const qty = parseFloat(formData.quantityKg);
     const price = parseFloat(formData.pricePerKg);
     const totalAmount = qty * price;
@@ -54,46 +69,80 @@ const Procurement = () => {
     
     setProcurements([newProc, ...procurements]);
     setShowAddModal(false);
-    setFormData({ memberId: '', commodity: 'Wheat', quantityKg: '', grade: 'A', pricePerKg: '' });
+    setFormData({ memberId: 'FPO-M-1001', commodity: 'Wheat', quantityKg: '', grade: 'A', pricePerKg: '25.00', warehouseId: '301' });
     setErrors({});
+    addToast?.(`Procurement of ${qty} kg ${formData.commodity} recorded for ${member.name}. Payment pending approval.`, 'success');
   };
 
   const markAsPaid = (id) => {
-    setProcurements(procurements.map(p => p.id === id ? { ...p, paymentStatus: 'PAID' } : p));
+    setProcurements(procurements.map(p => {
+      if (p.id === id) {
+        addToast?.(`Payment of ₹${p.totalAmount?.toLocaleString()} for ${p.memberName} marked as PAID.`, 'success');
+        return { ...p, paymentStatus: 'PAID' };
+      }
+      return p;
+    }));
   };
 
   return (
     <div className="pb-10">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pt-4">
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pt-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Procurement</h1>
-          <p className="text-gray-500 font-medium">Manage collective input and produce aggregation.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Produce Aggregation & Procurement</h1>
+          <p className="text-slate-500 text-xs font-medium">Record collection center crop deliveries, quality grading (A/B/C/REJECT), and payout settlements.</p>
         </div>
         
         {['Admin', 'FPO Manager', 'Collection Agent'].includes(user?.role) && (
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white font-medium rounded-xl hover:bg-black transition-colors shadow-sm" onClick={() => setShowAddModal(true)}>
-              <Plus size={18} /> <span>New Entry</span>
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 transition-colors shadow-xs"
+            >
+              <Plus size={16} /> <span>Record Procurement</span>
             </button>
           </div>
         )}
       </div>
 
-      <div className="bg-white rounded-3xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-200/50 overflow-hidden animate-fade-up delay-100">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden animate-fade-up">
         
         {/* Toolbar */}
-        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all shadow-sm"
-              placeholder="Search by member or commodity..."
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs"
+              placeholder="Search by farmer name or commodity..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <select 
+              value={gradeFilter} 
+              onChange={e => setGradeFilter(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+            >
+              <option value="ALL">All Grades</option>
+              <option value="A">Grade A (Premium)</option>
+              <option value="B">Grade B (Standard)</option>
+              <option value="C">Grade C (Low)</option>
+              <option value="REJECT">REJECT</option>
+            </select>
+
+            <select 
+              value={paymentFilter} 
+              onChange={e => setPaymentFilter(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+            >
+              <option value="ALL">All Payments</option>
+              <option value="PAID">PAID</option>
+              <option value="PENDING">PENDING</option>
+            </select>
           </div>
         </div>
 
@@ -101,43 +150,51 @@ const Procurement = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50">
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Member</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Commodity</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Grade</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Qty (kg)</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Price/kg</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total (₹)</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
-                <th className="py-4 px-6 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right">Action</th>
+              <tr className="bg-slate-50/80 border-b border-slate-100">
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Farmer Member</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Commodity</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Quality Grade</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Qty (kg)</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Price / kg</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Amount</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Payment Status</th>
+                <th className="py-3.5 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Approve</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-100">
               {filtered.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="py-4 px-6 text-sm text-gray-500">{p.date}</td>
+                <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-4 px-6 text-xs text-slate-500 font-medium">{p.date}</td>
                   <td className="py-4 px-6">
-                    <div className="font-semibold text-gray-900 mb-0.5">{p.memberName}</div>
-                    <div className="text-xs text-gray-400 font-mono">{p.memberId}</div>
+                    <div className="font-bold text-slate-900 text-xs">{p.memberName}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">{p.memberId}</div>
                   </td>
-                  <td className="py-4 px-6 text-sm text-gray-900 font-medium">{p.commodity}</td>
+                  <td className="py-4 px-6 text-xs text-slate-900 font-bold">{p.commodity}</td>
                   <td className="py-4 px-6">
-                    <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold tracking-wider ${p.grade === 'REJECT' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                      {p.grade}
+                    <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
+                      p.grade === 'REJECT' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-700'
+                    }`}>
+                      Grade {p.grade}
                     </span>
                   </td>
-                  <td className="py-4 px-6 text-sm text-gray-900 font-medium">{p.quantityKg}</td>
-                  <td className="py-4 px-6 text-sm text-gray-500">₹{p.pricePerKg}</td>
-                  <td className="py-4 px-6 text-sm font-bold text-gray-900">₹{p.totalAmount?.toLocaleString()}</td>
+                  <td className="py-4 px-6 text-xs text-slate-900 font-bold">{p.quantityKg} kg</td>
+                  <td className="py-4 px-6 text-xs text-slate-600">₹{p.pricePerKg}</td>
+                  <td className="py-4 px-6 text-xs font-bold text-slate-900">₹{p.totalAmount?.toLocaleString()}</td>
                   <td className="py-4 px-6">
-                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${p.paymentStatus === 'PAID' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-                      {p.paymentStatus === 'PAID' ? 'Paid' : 'Pending'}
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      p.paymentStatus === 'PAID' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>
+                      {p.paymentStatus}
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
                     {p.paymentStatus === 'PENDING' && ['Admin', 'FPO Manager'].includes(user?.role) && (
-                      <button onClick={() => markAsPaid(p.id)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Mark Paid">
+                      <button 
+                        onClick={() => markAsPaid(p.id)} 
+                        className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" 
+                        title="Mark Payment Paid"
+                      >
                         <CheckCircle size={18} />
                       </button>
                     )}
@@ -146,8 +203,8 @@ const Procurement = () => {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="py-12 text-center text-gray-400 text-sm">
-                    No procurements found matching "{searchTerm}"
+                  <td colSpan="9" className="py-12 text-center text-slate-400 text-xs">
+                    No procurement records matching "{searchTerm}"
                   </td>
                 </tr>
               )}
@@ -156,67 +213,107 @@ const Procurement = () => {
         </div>
       </div>
 
-      {/* Add Modal */}
+      {/* Record Procurement Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/20 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs animate-fade-in">
           <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900">Record Procurement</h2>
-              <button onClick={() => setShowAddModal(false)} className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
-                <X size={20} />
-              </button>
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-900 text-sm">Record Crop Procurement</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-900">✕</button>
             </div>
             
-            <form onSubmit={handleAddSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Member ID</label>
-                <input type="text" className={`w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:bg-white transition-all ${errors.memberId ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-gray-900'}`} value={formData.memberId} onChange={e => {setFormData({...formData, memberId: e.target.value}); setErrors({...errors, memberId: null})}} placeholder="e.g. FPO-M-1001" />
-                {errors.memberId && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.memberId}</p>}
+                <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">Select Farmer Member</label>
+                <select 
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  value={formData.memberId} 
+                  onChange={e => setFormData({...formData, memberId: e.target.value})}
+                >
+                  {mockMembers.map(m => (
+                    <option key={m.memberId} value={m.memberId}>{m.name} ({m.memberId}) - {m.village}</option>
+                  ))}
+                </select>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-5">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Commodity</label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/60 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 focus:bg-white transition-all appearance-none" value={formData.commodity} onChange={e => setFormData({...formData, commodity: e.target.value})}>
+                  <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">Commodity</label>
+                  <select 
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 focus:outline-none"
+                    value={formData.commodity} 
+                    onChange={e => setFormData({...formData, commodity: e.target.value})}
+                  >
                     <option value="Wheat">Wheat</option>
                     <option value="Rice">Rice</option>
                     <option value="Soybean">Soybean</option>
                     <option value="Cotton">Cotton</option>
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Grade</label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200/60 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 focus:bg-white transition-all appearance-none" value={formData.grade} onChange={e => setFormData({...formData, grade: e.target.value})}>
-                    <option value="A">A (Premium)</option>
-                    <option value="B">B (Standard)</option>
-                    <option value="C">C (Low Quality)</option>
+                  <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">Quality Grade</label>
+                  <select 
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 focus:outline-none"
+                    value={formData.grade} 
+                    onChange={e => setFormData({...formData, grade: e.target.value})}
+                  >
+                    <option value="A">Grade A (Premium)</option>
+                    <option value="B">Grade B (Standard)</option>
+                    <option value="C">Grade C (Low)</option>
                     <option value="REJECT">REJECT</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Quantity (kg)</label>
-                  <input type="number" className={`w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:bg-white transition-all ${errors.quantityKg ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-gray-900'}`} value={formData.quantityKg} onChange={e => {setFormData({...formData, quantityKg: e.target.value}); setErrors({...errors, quantityKg: null})}} />
-                  {errors.quantityKg && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.quantityKg}</p>}
+                  <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">Quantity (kg)</label>
+                  <input 
+                    type="number" 
+                    className={`w-full px-4 py-2.5 bg-slate-50 border rounded-2xl text-xs text-slate-900 focus:outline-none ${errors.quantityKg ? 'border-rose-300' : 'border-slate-200'}`} 
+                    value={formData.quantityKg} 
+                    onChange={e => setFormData({...formData, quantityKg: e.target.value})} 
+                    placeholder="1000" 
+                  />
+                  {errors.quantityKg && <p className="text-rose-500 text-[11px] mt-1 ml-1 font-medium">{errors.quantityKg}</p>}
                 </div>
+
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 ml-1">Price per kg (₹)</label>
-                  <input type="number" step="0.5" className={`w-full px-4 py-2.5 bg-gray-50/50 border rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:bg-white transition-all ${errors.pricePerKg ? 'border-red-300 focus:border-red-500' : 'border-gray-200/60 focus:border-gray-900'}`} value={formData.pricePerKg} onChange={e => {setFormData({...formData, pricePerKg: e.target.value}); setErrors({...errors, pricePerKg: null})}} />
-                  {errors.pricePerKg && <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.pricePerKg}</p>}
+                  <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">Price per kg (₹)</label>
+                  <input 
+                    type="number" 
+                    step="0.5" 
+                    className={`w-full px-4 py-2.5 bg-slate-50 border rounded-2xl text-xs text-slate-900 focus:outline-none ${errors.pricePerKg ? 'border-rose-300' : 'border-slate-200'}`} 
+                    value={formData.pricePerKg} 
+                    onChange={e => setFormData({...formData, pricePerKg: e.target.value})} 
+                    placeholder="25.00" 
+                  />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">
-                <button type="button" className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm rounded-full transition-colors" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-gray-900 hover:bg-black text-white font-medium text-sm rounded-full transition-colors shadow-sm">Save Record</button>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">Destination Warehouse</label>
+                <select 
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 focus:outline-none"
+                  value={formData.warehouseId} 
+                  onChange={e => setFormData({...formData, warehouseId: e.target.value})}
+                >
+                  {mockWarehouses.map(w => (
+                    <option key={w.id} value={w.id}>{w.location} (Capacity: {w.capacityMt} MT)</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-full">Cancel</button>
+                <button type="submit" className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-full shadow-xs">Record Collection</button>
               </div>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };
